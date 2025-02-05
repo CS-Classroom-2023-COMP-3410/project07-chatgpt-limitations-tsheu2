@@ -8,6 +8,36 @@ const gridColsInput = document.getElementById("gridCols");
 const welcomeContainer = document.querySelector(".welcome-container");
 const gameContainer = document.querySelector(".game-container");
 
+// Create and style the turn display
+const playerTurnContainer = document.createElement("div");
+playerTurnContainer.style.textAlign = "center";
+playerTurnContainer.style.fontSize = "24px";
+playerTurnContainer.style.fontWeight = "bold";
+playerTurnContainer.style.marginBottom = "15px";
+playerTurnContainer.style.padding = "10px";
+playerTurnContainer.style.backgroundColor = "#FFD700"; // Gold highlight
+playerTurnContainer.style.borderRadius = "8px";
+playerTurnContainer.style.color = "#3A5311"; // Jungle green text
+
+const playerTurnDisplay = document.createElement("div");
+playerTurnDisplay.textContent = "Player 1's Turn";
+playerTurnContainer.appendChild(playerTurnDisplay);
+
+// Scoreboard
+const player1ScoreDisplay = document.createElement("span");
+const player2ScoreDisplay = document.createElement("span");
+
+player1ScoreDisplay.textContent = "Player 1: 0 Pairs";
+player2ScoreDisplay.textContent = "Player 2: 0 Pairs";
+
+const gameInfo = document.querySelector(".game-info");
+gameInfo.appendChild(player1ScoreDisplay);
+gameInfo.appendChild(player2ScoreDisplay);
+
+// Multiplayer Variables
+let currentPlayer = 1;
+let player1Score = 0;
+let player2Score = 0;
 let cards = [];
 let flippedCards = [];
 let moves = 0;
@@ -54,7 +84,7 @@ function initializeGame() {
   cards = shuffleArray(cardPairs);
   createGrid();
   resetGameInfo();
-  startTimer(); // ✅ Fix: Ensure the timer starts when the game begins
+  startTimer();
 }
 
 function shuffleArray(array) {
@@ -68,6 +98,9 @@ function shuffleArray(array) {
 function createGrid() {
   gameGrid.innerHTML = "";
   gameGrid.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
+
+  // Insert the turn display above the game grid
+  gameContainer.insertBefore(playerTurnContainer, gameGrid);
 
   cards.forEach((image) => {
     const card = document.createElement("div");
@@ -108,29 +141,55 @@ function handleCardClick(e) {
 function checkForMatch() {
   const [card1, card2] = flippedCards;
 
-  // Compare image filenames instead of unique symbols
   if (card1.dataset.symbol === card2.dataset.symbol) {
     card1.classList.add("matched");
     card2.classList.add("matched");
+
+    // Update the current player's score
+    if (currentPlayer === 1) {
+      player1Score++;
+      player1ScoreDisplay.textContent = `Player 1: ${player1Score} Pairs`;
+    } else {
+      player2Score++;
+      player2ScoreDisplay.textContent = `Player 2: ${player2Score} Pairs`;
+    }
+
     flippedCards = [];
-    
-    // Check if all cards are matched
+
+    // Check if the game is won
     if (document.querySelectorAll(".card.matched").length === cards.length) {
       clearInterval(timerInterval);
-      alert(`Game completed in ${moves} moves and ${formatTime(timeElapsed)}!`);
+      declareWinner();
     }
   } else {
     setTimeout(() => {
       card1.classList.remove("flipped");
       card2.classList.remove("flipped");
       flippedCards = [];
+
+      // Switch turns only if no match
+      currentPlayer = currentPlayer === 1 ? 2 : 1;
+      playerTurnDisplay.textContent = `Player ${currentPlayer}'s Turn`;
     }, 1000);
   }
 }
 
+function declareWinner() {
+  let winnerMessage = "";
+  if (player1Score > player2Score) {
+    winnerMessage = `🎉 Player 1 wins with ${player1Score} pairs!`;
+  } else if (player2Score > player1Score) {
+    winnerMessage = `🎉 Player 2 wins with ${player2Score} pairs!`;
+  } else {
+    winnerMessage = `🤝 It's a tie! Both players got ${player1Score} pairs.`;
+  }
+  
+  setTimeout(() => alert(winnerMessage), 500);
+}
+
 function startTimer() {
   timeElapsed = 0;
-  clearInterval(timerInterval); // ✅ Fix: Ensure previous timer is cleared
+  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeElapsed++;
     timer.textContent = formatTime(timeElapsed);
@@ -144,13 +203,21 @@ function formatTime(seconds) {
 function resetGameInfo() {
   moves = 0;
   moveCounter.textContent = moves;
-  clearInterval(timerInterval); // ✅ Fix: Clear timer on game reset
+  clearInterval(timerInterval);
   timer.textContent = "00:00";
+
+  // Reset player turns and scores
+  currentPlayer = 1;
+  player1Score = 0;
+  player2Score = 0;
+  playerTurnDisplay.textContent = "Player 1's Turn";
+  player1ScoreDisplay.textContent = "Player 1: 0 Pairs";
+  player2ScoreDisplay.textContent = "Player 2: 0 Pairs";
 }
 
 restartBtn.addEventListener("click", () => {
   gameContainer.classList.add("hidden");
   welcomeContainer.classList.remove("hidden");
-  clearInterval(timerInterval); // ✅ Fix: Clear the timer on restart
+  clearInterval(timerInterval);
   resetGameInfo();
 });

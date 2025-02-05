@@ -1,0 +1,2 @@
+In order to get the new feature working, I adjusted the container to adapt to different screen sizes. Along the same lines,
+I also added adaptability to the cards and font sizes. Clamp() and minmax() were especially useful in these cases. 
